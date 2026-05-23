@@ -269,6 +269,7 @@ export async function inicializarWhatsApp() {
       authStrategy: new LocalAuth({ clientId: 'coletamax' }),
       puppeteer: {
         headless: true,
+        executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || undefined,
         args: [
           '--no-sandbox',
           '--disable-setuid-sandbox',
