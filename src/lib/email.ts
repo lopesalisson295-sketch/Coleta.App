@@ -1,5 +1,3 @@
-import { toast } from "@/stores/useToastStore";
-
 interface SendEmailParams {
   to: string;
   subject: string;
