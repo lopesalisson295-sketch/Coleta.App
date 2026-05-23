@@ -1,3 +1,5 @@
+import nodemailer from "nodemailer"
+
 interface SendEmailParams {
   to: string;
   subject: string;
@@ -5,14 +7,16 @@ interface SendEmailParams {
 }
 
 /**
- * Utilitário de disparo de e-mails usando a API oficial do Resend.
- * Se nenhuma chave for fornecida em RESEND_API_KEY, ele opera em modo de simulação (logs).
+ * Utilitário de disparo de e-mails usando SMTP seguro (como Gmail).
+ * Se as credenciais do SMTP não forem fornecidas, opera em modo de simulação (logs).
  */
 export async function enviarEmail({ to, subject, html }: SendEmailParams): Promise<boolean> {
-  const apiKey = process.env.RESEND_API_KEY;
-  const fromEmail = process.env.RESEND_FROM_EMAIL || "ColetaMax <onboarding@resend.dev>";
+  const smtpHost = process.env.SMTP_HOST || "smtp.gmail.com";
+  const smtpPort = parseInt(process.env.SMTP_PORT || "465");
+  const smtpUser = process.env.SMTP_USER;
+  const smtpPass = process.env.SMTP_PASS;
 
-  if (!apiKey) {
+  if (!smtpUser || !smtpPass) {
     console.log("\n==================================================");
     console.log("⚡ [ColetaMax] MODO SIMULAÇÃO DE E-MAIL ATIVADO ⚡");
     console.log(`Para: ${to}`);
@@ -27,30 +31,27 @@ export async function enviarEmail({ to, subject, html }: SendEmailParams): Promi
   }
 
   try {
-    const res = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${apiKey}`,
+    const transporter = nodemailer.createTransport({
+      host: smtpHost,
+      port: smtpPort,
+      secure: smtpPort === 465, // true para SSL (porta 465), false para TLS (porta 587)
+      auth: {
+        user: smtpUser,
+        pass: smtpPass,
       },
-      body: JSON.stringify({
-        from: fromEmail,
-        to,
-        subject,
-        html,
-      }),
     });
 
-    if (res.ok) {
-      console.log(`[ColetaMax] E-mail enviado com sucesso para ${to} via Resend.`);
-      return true;
-    } else {
-      const errData = await res.json();
-      console.error("[ColetaMax] Erro ao enviar e-mail via Resend:", errData);
-      return false;
-    }
+    const info = await transporter.sendMail({
+      from: `"ColetaMax" <${smtpUser}>`,
+      to,
+      subject,
+      html,
+    });
+
+    console.log(`[ColetaMax] E-mail enviado com sucesso para ${to}. ID: ${info.messageId}`);
+    return true;
   } catch (error) {
-    console.error("[ColetaMax] Falha de conexão ao enviar e-mail:", error);
+    console.error("[ColetaMax] Falha ao enviar e-mail via SMTP:", error);
     return false;
   }
 }
