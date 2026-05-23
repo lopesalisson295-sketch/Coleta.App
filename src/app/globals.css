@@ -1,0 +1,228 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: #F8FAFC;
+    --foreground: #0F172A;
+    
+    --card: #FFFFFF;
+    --card-foreground: #0F172A;
+    
+    --popover: #FFFFFF;
+    --popover-foreground: #0F172A;
+    
+    --primary: #0F172A;
+    --primary-foreground: #F8FAFC;
+    
+    --secondary: #F1F5F9;
+    --secondary-foreground: #0F172A;
+    
+    --muted: #F1F5F9;
+    --muted-foreground: #64748B;
+    
+    --accent: #10B981;
+    --accent-foreground: #FFFFFF;
+    
+    --warning: #F59E0B;
+    --warning-foreground: #FFFFFF;
+
+    --destructive: #EF4444;
+    --destructive-foreground: #FFFFFF;
+
+    --border: #E2E8F0;
+    --input: #E2E8F0;
+    --ring: #10B981;
+    
+    --radius: 0.75rem;
+  }
+  
+  .dark {
+    --background: #030712;
+    --foreground: #F9FAFB;
+    
+    --card: #0B0F19;
+    --card-foreground: #F9FAFB;
+    
+    --popover: #0B0F19;
+    --popover-foreground: #F9FAFB;
+    
+    --primary: #F9FAFB;
+    --primary-foreground: #030712;
+    
+    --secondary: #111827;
+    --secondary-foreground: #F9FAFB;
+    
+    --muted: #1F2937;
+    --muted-foreground: #9CA3AF;
+    
+    --accent: #10B981;
+    --accent-foreground: #FFFFFF;
+    
+    --warning: #F59E0B;
+    --warning-foreground: #FFFFFF;
+
+    --destructive: #EF4444;
+    --destructive-foreground: #FFFFFF;
+
+    --border: #1F2937;
+    --input: #1F2937;
+    --ring: #10B981;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground font-sans antialiased transition-colors duration-200;
+  }
+  ::selection {
+    background-color: rgba(16, 185, 129, 0.2);
+    color: inherit;
+  }
+}
+
+/* Custom premium utilities */
+@layer utilities {
+  .glass {
+    background-color: rgba(248, 250, 252, 0.7);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(226, 232, 240, 0.5);
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.03);
+  }
+  
+  .dark .glass {
+    background-color: rgba(11, 15, 25, 0.7);
+    border-color: rgba(31, 41, 55, 0.5);
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.2);
+  }
+  
+  .glass-card {
+    background-color: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(226, 232, 240, 0.5);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.04);
+  }
+  
+  .dark .glass-card {
+    background-color: rgba(11, 15, 25, 0.75);
+    border-color: rgba(31, 41, 55, 0.4);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  }
+
+  /* Glow Card Effects for Dark Mode */
+  .glow-card {
+    @apply relative overflow-hidden transition-all duration-300;
+  }
+  
+  .dark .glow-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(to right, rgba(16, 185, 129, 0.1), rgba(16, 185, 129, 0.05), transparent);
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+    transition: opacity 0.5s;
+    opacity: 0.8;
+  }
+
+  .dark .glow-card:hover::before {
+    background: linear-gradient(to right, rgba(16, 185, 129, 0.3), rgba(59, 130, 246, 0.2), transparent);
+    opacity: 1;
+  }
+
+  /* Feixe de laser animado do scanner de QR Code */
+  .qr-scanner-line {
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(to right, transparent, #10B981, transparent);
+    box-shadow: 0 0 12px 3px rgba(16, 185, 129, 0.8);
+    animation: scan 2.5s ease-in-out infinite;
+    z-index: 10;
+  }
+}
+
+/* Leaflet Popup — Dark Mode Override */
+/* O Leaflet renderiza HTML bruto com CSS inline, ignorando classes dark: do Tailwind */
+.dark .leaflet-popup-content-wrapper {
+  background-color: #0f172a !important;
+  color: #f1f5f9 !important;
+  border: 1px solid #1e293b !important;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5) !important;
+}
+.dark .leaflet-popup-tip {
+  background-color: #0f172a !important;
+  border-color: #1e293b !important;
+}
+.dark .leaflet-popup-content {
+  color: #f1f5f9 !important;
+}
+.dark .leaflet-popup-close-button {
+  color: #94a3b8 !important;
+}
+.dark .leaflet-popup-close-button:hover {
+  color: #f1f5f9 !important;
+}
+
+/* Select option — Dark Mode */
+.dark select option {
+  background-color: #0f172a;
+  color: #f1f5f9;
+}
+
+/* Custom leaflet marker — remove background branco padrão */
+.custom-leaflet-marker {
+  background: transparent !important;
+  border: none !important;
+}
+
+/* Animations */
+@keyframes scan {
+  0%, 100% {
+    top: 5%;
+  }
+  50% {
+    top: 95%;
+  }
+}
+
+@keyframes bell-ring {
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+  15% {
+    transform: rotate(15deg);
+  }
+  30% {
+    transform: rotate(-12deg);
+  }
+  45% {
+    transform: rotate(10deg);
+  }
+  60% {
+    transform: rotate(-8deg);
+  }
+  75% {
+    transform: rotate(4deg);
+  }
+  90% {
+    transform: rotate(-2deg);
+  }
+}
+
+.animate-bell-ring {
+  animation: bell-ring 0.8s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+  transform-origin: top center;
+}

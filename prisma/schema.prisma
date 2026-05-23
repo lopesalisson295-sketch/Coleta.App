@@ -1,0 +1,187 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id                 String     @id @default(uuid())
+  nome               String
+  email              String     @unique
+  senha              String
+  role               Role       @default(MOTORISTA)
+  avatar             String?
+  onboardingCompleto Boolean    @default(false)
+  emailConfirmado    Boolean    @default(false)
+  tokenConfirmacao   String?
+  
+  resetToken         String?
+  resetTokenExpiry   DateTime?
+
+  veiculos           Vehicle[]
+  coletas            Collection[] @relation("MotoristaColetas")
+  entregas           Delivery[]   @relation("MotoristaEntregas")
+  
+  coletasAjudante    Collection[] @relation("AjudanteColetas")
+  entregasAjudante   Delivery[]   @relation("AjudanteEntregas")
+
+  mensagensEnviadas  Message[]  @relation("Remetente")
+  mensagensRecebidas Message[]  @relation("Destinatario")
+
+  notificacoes       Notification[]
+
+  createdAt          DateTime   @default(now())
+  updatedAt          DateTime   @updatedAt
+}
+
+model Vehicle {
+  id         String   @id @default(uuid())
+  nome       String
+  placa      String   @unique
+  status     StatusVeiculo @default(DISPONIVEL)
+  regiao     String
+  qtdColetas Int      @default(0)
+  
+  motoristaId String?
+  motorista   User?   @relation(fields: [motoristaId], references: [id])
+  coletas     Collection[]
+
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model Collection {
+  id         String   @id @default(uuid())
+  endereco   String
+  cliente    String
+  telefone   String
+  status     StatusColeta @default(PENDENTE)
+  observacao String?
+  descricaoItens String? @db.Text
+  imagemItensUrl String? @db.Text
+  latitude   Float?
+  longitude  Float?
+  imagemUrl  String?
+  confirmedAt DateTime?
+
+  motoristaId String?
+  motorista   User?   @relation("MotoristaColetas", fields: [motoristaId], references: [id])
+  
+  ajudanteId  String?
+  ajudante    User?   @relation("AjudanteColetas", fields: [ajudanteId], references: [id])
+  
+  veiculoId   String?
+  veiculo     Vehicle? @relation(fields: [veiculoId], references: [id])
+
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model Delivery {
+  id           String   @id @default(uuid())
+  endereco     String
+  destinatario String
+  telefone     String
+  status       StatusEntrega @default(PENDENTE)
+  observacao   String?
+  descricaoItens String? @db.Text
+  imagemItensUrl String? @db.Text
+  latitude     Float?
+  longitude    Float?
+  imagemUrl    String?
+  confirmedAt  DateTime?
+
+  motoristaId  String?
+  motorista    User?   @relation("MotoristaEntregas", fields: [motoristaId], references: [id])
+  
+  ajudanteId   String?
+  ajudante     User?   @relation("AjudanteEntregas", fields: [ajudanteId], references: [id])
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Message {
+  id             String   @id @default(uuid())
+  conteudo       String
+  tipo           String   @default("TEXTO") // "TEXTO" ou "AUDIO"
+  lida           Boolean  @default(false)
+  
+  remetenteId    String
+  remetente      User     @relation("Remetente", fields: [remetenteId], references: [id])
+  
+  destinatarioId String
+  destinatario   User     @relation("Destinatario", fields: [destinatarioId], references: [id])
+
+  criadoEm       DateTime @default(now())
+}
+
+model AutomationSettings {
+  id                            String   @id @default("default")
+  
+  // Gatilho 1: Início de Rota (Status: EM_ANDAMENTO)
+  rotaIniciarClienteAtivo       Boolean  @default(true)
+  rotaIniciarClienteTemplate    String   @default("Olá {cliente}! Sua carga está a caminho no veículo {veiculo} com o motorista {motorista} e ajudante {ajudante}.")
+  rotaIniciarGrupoAtivo         Boolean  @default(true)
+  rotaIniciarGrupoTemplate      String   @default("🚚 Rota Iniciada: Equipe {motorista} e {ajudante} iniciou a viagem para o cliente {cliente} ({endereco}).")
+
+  // Gatilho 2: Conclusão (Status: COLETADA / ENTREGUE)
+  conclusaoClienteAtivo         Boolean  @default(true)
+  conclusaoClienteTemplate      String   @default("Olá {cliente}! Sua carga foi coletada/entregue com sucesso por nossa equipe. Obrigado!")
+  conclusaoGrupoAtivo           Boolean  @default(true)
+  conclusaoGrupoTemplate        String   @default("✅ Operação Concluída: {motorista} e {ajudante} finalizaram a carga do cliente {cliente} no endereço {endereco}.")
+
+  // Gatilho 3: Cancelamento / Não Realizada (Status: CANCELADA / NAO_REALIZADA)
+  cancelamentoClienteAtivo      Boolean  @default(true)
+  cancelamentoClienteTemplate   String   @default("Olá {cliente}, sua carga não pôde ser atendida hoje. Motivo: {observacao}.")
+  cancelamentoGrupoAtivo        Boolean  @default(true)
+  cancelamentoGrupoTemplate     String   @default("❌ Falha na Rota: O cliente {cliente} não foi atendido. Motivo: {observacao}. Equipe: {motorista}/{ajudante}.")
+
+  telefoneGrupo                 String   @default("11999999999")
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  titulo    String
+  mensagem  String
+  tipo      String   // WHATSAPP, COLETA, ENTREGA, SYSTEM
+  link      String?
+  lida      Boolean  @default(false)
+  
+  usuarioId String?
+  usuario   User?    @relation(fields: [usuarioId], references: [id])
+
+  criadoEm  DateTime @default(now())
+}
+
+enum Role {
+  ADMIN
+  MOTORISTA
+  AJUDANTE
+}
+
+enum StatusColeta {
+  PENDENTE
+  EM_ANDAMENTO
+  COLETADA
+  CANCELADA
+  NAO_REALIZADA
+}
+
+enum StatusEntrega {
+  PENDENTE
+  EM_ANDAMENTO
+  ENTREGUE
+  CANCELADA
+  NAO_REALIZADA
+}
+
+enum StatusVeiculo {
+  DISPONIVEL
+  EM_USO
+  MANUTENCAO
+}
